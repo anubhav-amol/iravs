@@ -1,51 +1,62 @@
 from analyzer.static_analyzer import analyze_script
+from analyzer.decision_engine import choose_environment
+
 from executors.native_executor import run_native
 from executors.docker_executor import run_docker
 from executors.kvm_executor import run_kvm
 
-def classify(scores):
-
-    cpu = scores["cpu"]
-    disk = scores["disk"]
-    network = scores["network"]
-
-    if cpu >= disk and cpu >= network:
-        return "CPU_INTENSIVE"
-
-    if disk >= cpu and disk >= network:
-        return "DISK_IO"
-
-    return "NETWORK"
-
 
 def main():
 
+    # Script to analyze and execute
     script = "workloads/cpu_test.py"
 
+    print("\n========== IRAVS SYSTEM ==========\n")
+
+    # Step 1 — Analyze workload
     scores = analyze_script(script)
 
-    print("\nWorkload Scores:", scores)
+    print("Workload Scores:")
+    print(scores)
 
-    workload_type = classify(scores)
+    # Step 2 — Choose best environment
+    env = choose_environment(scores)
 
-    print("Predicted Workload:", workload_type)
+    print("\nSelected Execution Environment:", env)
 
-    print("\nRunning Native Execution...\n")
+    # Step 3 — Execute workload
+    print("\nExecuting workload...\n")
 
-    native_result = run_native(script)
+    if env == "native":
 
-    print("Native Runtime:", native_result["runtime"])
+        result = run_native(script)
 
-    print("\nRunning Docker Execution...\n")
+    elif env == "docker":
 
-    docker_result = run_docker(script)
+        result = run_docker(script)
 
-    print("Docker Runtime:", docker_result["runtime"])
-    print("\nRunning KVM Execution...\n")
+    elif env == "kvm":
 
-    kvm_result = run_kvm(script)
+        result = run_kvm(script)
 
-    print("KVM Runtime:", kvm_result["runtime"])
+    else:
+
+        print("Unknown environment selected.")
+        return
+
+    # Step 4 — Show results
+    print("\n========== EXECUTION RESULT ==========\n")
+
+    print("Runtime:", result["runtime"], "seconds")
+
+    if result.get("stdout"):
+        print("\nProgram Output:")
+        print(result["stdout"])
+
+    if result.get("stderr"):
+        print("\nErrors:")
+        print(result["stderr"])
+
 
 if __name__ == "__main__":
     main()
