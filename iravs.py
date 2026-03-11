@@ -1,5 +1,6 @@
 from analyzer.static_analyzer import analyze_script
 from executors.native_executor import run_native
+from executors.docker_executor import run_docker
 
 
 def classify(scores):
@@ -29,13 +30,17 @@ def main():
 
     print("Predicted Workload:", workload_type)
 
-    print("\nRunning in Native Environment...\n")
+    print("\nRunning Native Execution...\n")
 
-    result = run_native(script)
+    native_result = run_native(script)
 
-    print("Execution Time:", result["runtime"], "seconds")
-    print("Average CPU Usage:", result["avg_cpu"])
-    print("Program Output:\n", result["stdout"])
+    print("Native Runtime:", native_result["runtime"])
+
+    print("\nRunning Docker Execution...\n")
+
+    docker_result = run_docker(script)
+
+    print("Docker Runtime:", docker_result["runtime"])
 
 
 if __name__ == "__main__":
