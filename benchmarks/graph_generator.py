@@ -1,26 +1,32 @@
 import csv
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 
 def generate_graph():
 
-    environments = []
-    runtimes = []
+    runtimes = defaultdict(list)
 
     with open("benchmarks/results.csv", "r") as f:
 
         reader = csv.DictReader(f)
 
         for row in reader:
-            environments.append(row["environment"])
-            runtimes.append(float(row["runtime"]))
+            runtimes[row["environment"]].append(float(row["runtime"]))
+
+    environments = []
+    averages = []
+
+    for env, values in runtimes.items():
+        environments.append(env)
+        averages.append(sum(values) / len(values))
 
     plt.figure()
 
-    plt.bar(environments, runtimes)
+    plt.bar(environments, averages)
 
     plt.xlabel("Execution Environment")
-    plt.ylabel("Runtime (seconds)")
+    plt.ylabel("Average Runtime (seconds)")
     plt.title("IRAVS Environment Performance Comparison")
 
     plt.savefig("benchmarks/performance.png")
