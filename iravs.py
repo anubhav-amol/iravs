@@ -1,4 +1,5 @@
 from analyzer.static_analyzer import analyze_script
+from executors.native_executor import run_native
 
 
 def classify(scores):
@@ -22,11 +23,19 @@ def main():
 
     scores = analyze_script(script)
 
-    print("Workload scores:", scores)
+    print("\nWorkload Scores:", scores)
 
-    category = classify(scores)
+    workload_type = classify(scores)
 
-    print("Predicted workload type:", category)
+    print("Predicted Workload:", workload_type)
+
+    print("\nRunning in Native Environment...\n")
+
+    result = run_native(script)
+
+    print("Execution Time:", result["runtime"], "seconds")
+    print("Average CPU Usage:", result["avg_cpu"])
+    print("Program Output:\n", result["stdout"])
 
 
 if __name__ == "__main__":
