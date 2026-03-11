@@ -1,7 +1,7 @@
 from analyzer.static_analyzer import analyze_script
 from executors.native_executor import run_native
 from executors.docker_executor import run_docker
-
+from executors.kvm_executor import run_kvm
 
 def classify(scores):
 
@@ -41,7 +41,11 @@ def main():
     docker_result = run_docker(script)
 
     print("Docker Runtime:", docker_result["runtime"])
+    print("\nRunning KVM Execution...\n")
 
+    kvm_result = run_kvm(script)
+
+    print("KVM Runtime:", kvm_result["runtime"])
 
 if __name__ == "__main__":
     main()
