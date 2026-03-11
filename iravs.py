@@ -11,28 +11,46 @@ from benchmarks.performance_logger import log_result
 from benchmarks.graph_generator import generate_graph
 
 
-def benchmark_mode(script):
+def benchmark_mode():
 
     print("\nRunning Benchmark Mode...\n")
 
-    print("Running Native Execution...")
-    native_result = run_native(script)
-    print("Native Runtime:", native_result["runtime"])
+    scripts = [
+        "workloads/cpu_test.py",
+        "workloads/disk_test.py",
+        "workloads/network_test.py"
+    ]
 
-    print("\nRunning Docker Execution...")
-    docker_result = run_docker(script)
-    print("Docker Runtime:", docker_result["runtime"])
+    for script in scripts:
 
-    print("\nRunning KVM Execution...")
-    kvm_result = run_kvm(script)
-    print("KVM Runtime:", kvm_result["runtime"])
+        print("\n===============================")
+        print("Testing workload:", script)
+        print("===============================\n")
 
-    log_result("native", native_result["runtime"])
-    log_result("docker", docker_result["runtime"])
-    log_result("kvm", kvm_result["runtime"])
+        print("Running Native Execution...")
+        native_result = run_native(script)
+        print("Native Runtime:", native_result["runtime"])
+
+        print("\nRunning Docker Execution...")
+        docker_result = run_docker(script)
+        print("Docker Runtime:", docker_result["runtime"])
+
+        print("\nRunning KVM Execution...")
+        kvm_result = run_kvm(script)
+        print("KVM Runtime:", kvm_result["runtime"])
+
+        # Log results
+        log_result("native", native_result["runtime"])
+        log_result("docker", docker_result["runtime"])
+        log_result("kvm", kvm_result["runtime"])
 
 
-def decision_mode(script, scores):
+def decision_mode(script):
+
+    scores = analyze_script(script)
+
+    print("\nWorkload Scores:")
+    print(scores)
 
     print("\nRunning Decision Mode...\n")
 
@@ -41,17 +59,21 @@ def decision_mode(script, scores):
     print("Selected Execution Environment:", env)
 
     if env == "native":
+
         result = run_native(script)
 
     elif env == "docker":
+
         result = run_docker(script)
 
     else:
+
         result = run_kvm(script)
 
     runtime = result["runtime"]
 
     print("\n========== EXECUTION RESULT ==========\n")
+
     print("Runtime:", runtime, "seconds")
 
     if result.get("stdout"):
@@ -69,32 +91,34 @@ def main():
 
     print("\n========== IRAVS SYSTEM ==========\n")
 
-    script = "workloads/cpu_test.py"
-
-    scores = analyze_script(script)
-
-    print("Workload Scores:")
-    print(scores)
-
     if len(sys.argv) < 2:
-        print("\nUsage:")
-        print("python iravs.py benchmark")
-        print("python iravs.py decision")
+
+        print("Usage:")
+        print("  python iravs.py benchmark")
+        print("  python iravs.py decision workloads/cpu_test.py")
         return
 
-    mode = sys.argv[1].lower()
+    mode = sys.argv[1]
 
     if mode == "benchmark":
 
-        benchmark_mode(script)
+        benchmark_mode()
 
     elif mode == "decision":
 
-        decision_mode(script, scores)
+        if len(sys.argv) < 3:
+            print("Please provide a workload script.")
+            print("Example: python iravs.py decision workloads/cpu_test.py")
+            return
+
+        script = sys.argv[2]
+
+        decision_mode(script)
 
     else:
 
-        print("Invalid mode. Use 'benchmark' or 'decision'.")
+        print("Invalid mode.")
+        print("Use 'benchmark' or 'decision'.")
         return
 
     generate_graph()
