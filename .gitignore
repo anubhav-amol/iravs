@@ -6,3 +6,5 @@ __pycache__/
 *.png
 *.log
 .env
+benchmarks/results.csv
+benchmarks/performance.png
