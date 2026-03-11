@@ -10,6 +10,12 @@ from executors.kvm_executor import run_kvm
 from benchmarks.performance_logger import log_result
 from benchmarks.graph_generator import generate_graph
 
+from benchmarks.startup_overhead import (
+    measure_native_startup,
+    measure_docker_startup,
+    measure_kvm_startup
+)
+
 
 def benchmark_mode():
 
@@ -23,9 +29,9 @@ def benchmark_mode():
 
     for script in scripts:
 
-        print("\n===============================")
+        print("\n==============================")
         print("Testing workload:", script)
-        print("===============================\n")
+        print("==============================\n")
 
         print("Running Native Execution...")
         native_result = run_native(script)
@@ -39,24 +45,27 @@ def benchmark_mode():
         kvm_result = run_kvm(script)
         print("KVM Runtime:", kvm_result["runtime"])
 
-        # Log results
         log_result("native", native_result["runtime"])
         log_result("docker", docker_result["runtime"])
         log_result("kvm", kvm_result["runtime"])
 
+    generate_graph()
+
+    print("\nBenchmark results saved.")
+
 
 def decision_mode(script):
 
+    print("\nRunning Decision Mode...\n")
+
     scores = analyze_script(script)
 
-    print("\nWorkload Scores:")
+    print("Workload Scores:")
     print(scores)
-
-    print("\nRunning Decision Mode...\n")
 
     env = choose_environment(scores)
 
-    print("Selected Execution Environment:", env)
+    print("\nSelected Execution Environment:", env)
 
     if env == "native":
 
@@ -86,6 +95,21 @@ def decision_mode(script):
 
     log_result(env, runtime)
 
+    generate_graph()
+
+
+def startup_mode():
+
+    print("\nMeasuring Environment Startup Overhead...\n")
+
+    native = measure_native_startup()
+    docker = measure_docker_startup()
+    kvm = measure_kvm_startup()
+
+    print("Native Startup :", native, "seconds")
+    print("Docker Startup :", docker, "seconds")
+    print("KVM Startup :", kvm, "seconds")
+
 
 def main():
 
@@ -94,8 +118,10 @@ def main():
     if len(sys.argv) < 2:
 
         print("Usage:")
-        print("  python iravs.py benchmark")
-        print("  python iravs.py decision workloads/cpu_test.py")
+        print(" python iravs.py benchmark")
+        print(" python iravs.py decision workloads/cpu_test.py")
+        print(" python iravs.py startup")
+
         return
 
     mode = sys.argv[1]
@@ -107,24 +133,25 @@ def main():
     elif mode == "decision":
 
         if len(sys.argv) < 3:
+
             print("Please provide a workload script.")
-            print("Example: python iravs.py decision workloads/cpu_test.py")
+            print("Example:")
+            print(" python iravs.py decision workloads/cpu_test.py")
+
             return
 
         script = sys.argv[2]
 
         decision_mode(script)
 
+    elif mode == "startup":
+
+        startup_mode()
+
     else:
 
         print("Invalid mode.")
-        print("Use 'benchmark' or 'decision'.")
-        return
-
-    generate_graph()
-
-    print("\nResults saved in benchmarks/results.csv")
-    print("Graph saved in benchmarks/performance.png")
+        print("Use: benchmark | decision | startup")
 
 
 if __name__ == "__main__":
